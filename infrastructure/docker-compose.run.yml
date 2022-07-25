@@ -1,0 +1,17 @@
+version: '3.4'
+
+services:
+  api:
+    image: ${DOCKER_IMAGE}:${DOCKER_TAG}
+    environment:
+      ASPNETCORE_URLS: http://+:80
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      CLIENT_ID: ${CLIENT_ID}
+      CLIENT_SECRET: ${CLIENT_SECRET}
+      SERVICE_SCOPE: ${SERVICE_SCOPE}
+      SERVICE_URL: ${SERVICE_URL}
+      TENANT_ID: ${TENANT_ID}
+      OPENID_AUTHORITY: ${OPENID_AUTHORITY}
+    restart: unless-stopped
+    ports:
+      - "${SERVER_PORT}:80"
