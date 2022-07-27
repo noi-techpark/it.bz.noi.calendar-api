@@ -1,0 +1,110 @@
+name: CI/CD
+
+on:
+  push:
+  pull_request:
+
+env:
+  PROJECT_NAME: noi-community-api
+  DOCKER_IMAGE: ghcr.io/${{ github.repository }}/${{ github.event.repository.name }}-app
+  DOCKER_TAG: ${{ github.sha }}
+  SERVER_PORT: 1044
+
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Create .env file
+        uses: noi-techpark/github-actions/env-file@v2
+        env:
+          X_DOCKER_IMAGE: ${{ env.DOCKER_IMAGE }}
+          X_DOCKER_TAG: ${{ env.DOCKER_TAG }}
+          X_SERVER_PORT: ${{ env.SERVER_PORT }}
+
+      - name: Build image
+        uses: noi-techpark/github-actions/docker-build@v2
+
+  deploy-test:
+    runs-on: ubuntu-20.04
+    if: github.ref == 'refs/heads/main'
+    needs: test
+    concurrency: deploy-test
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+
+      - name: Create .env file
+        uses: noi-techpark/github-actions/env-file@v2
+        with:
+          working-directory: ${{ env.WORKING_DIRECTORY }}
+        env:
+          X_COMPOSE_PROJECT_NAME: ${{ env.PROJECT_NAME }}
+          X_DOCKER_IMAGE: ${{ env.DOCKER_IMAGE }}
+          X_DOCKER_TAG: ${{ env.DOCKER_TAG }}
+          X_SERVER_PORT: ${{ env.SERVER_PORT }}
+          X_ASPNETCORE_ENVIRONMENT: "Development"
+          X_CLIENT_ID: ${{ secrets.CLIENT_ID_TEST }}
+          X_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET_TEST }}
+          X_SERVICE_SCOPE: ${{ secrets.SERVICE_SCOPE_TEST }}
+          X_SERVICE_URL: ${{ secrets.SERVICE_URL_TEST }}
+          X_TENANT_ID: ${{ secrets.TENANT_ID_TEST }}
+          X_OPENID_AUTHORITY: "https://auth.opendatahub.testingmachine.eu/auth/realms/noi/"
+
+      - name: Build and push images
+        uses: noi-techpark/github-actions/docker-build-and-push@v2
+        with:
+          docker-username: ${{ github.actor }}
+          docker-password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy application
+        uses: noi-techpark/github-actions/docker-deploy@v2
+        with:
+          hosts: 'test'
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          docker-username: 'noi-techpark-bot'
+          docker-password: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+          project-name: ${{ env.PROJECT_NAME }}
+
+  deploy-prod:
+    runs-on: ubuntu-20.04
+    if: github.ref == 'refs/heads/prod'
+    needs: test
+    concurrency: deploy-prod
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+
+      - name: Create .env file
+        uses: noi-techpark/github-actions/env-file@v2
+        with:
+          working-directory: ${{ env.WORKING_DIRECTORY }}
+        env:
+          X_COMPOSE_PROJECT_NAME: ${{ env.PROJECT_NAME }}
+          X_DOCKER_IMAGE: ${{ env.DOCKER_IMAGE }}
+          X_DOCKER_TAG: ${{ env.DOCKER_TAG }}
+          X_SERVER_PORT: ${{ env.SERVER_PORT }}
+          X_ASPNETCORE_ENVIRONMENT: "Production"
+          X_CLIENT_ID: ${{ secrets.CLIENT_ID_PROD }}
+          X_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET_PROD }}
+          X_SERVICE_SCOPE: ${{ secrets.SERVICE_SCOPE_PROD }}
+          X_SERVICE_URL: ${{ secrets.SERVICE_URL_PROD }}
+          X_TENANT_ID: ${{ secrets.TENANT_ID_PROD }}
+          X_OPENID_AUTHORITY: "https://auth.opendatahub.bz.it/auth/realms/noi/"
+
+      - name: Build and push images
+        uses: noi-techpark/github-actions/docker-build-and-push@v2
+        with:
+          docker-username: ${{ github.actor }}
+          docker-password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy application
+        uses: noi-techpark/github-actions/docker-deploy@v2
+        with:
+          hosts: 'prod'
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          docker-username: 'noi-techpark-bot'
+          docker-password: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+          project-name: ${{ env.PROJECT_NAME }}
+
