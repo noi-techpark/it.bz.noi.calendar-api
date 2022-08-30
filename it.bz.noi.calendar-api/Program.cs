@@ -23,7 +23,7 @@ string tenantId = GetEnv("TENANT_ID");
 string clientId = GetEnv("CLIENT_ID");
 string openIdAuthority = GetEnv("OPENID_AUTHORITY");
 var meetingRooms = GetEnv("MEETING_ROOMS").Split(',', ';');
-int countOfEvents = int.Parse(TryGetEnv("COUNT_OF_EVENTS") ?? "5");
+int countOfEvents = int.Parse(TryGetEnv("NUMBER_OF_EVENTS") ?? "5");
 
 var builder = WebApplication.CreateBuilder(args);
 
