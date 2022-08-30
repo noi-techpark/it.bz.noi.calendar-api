@@ -108,7 +108,7 @@ async Task<IEnumerable<Event>> GetAllCalendarEvents()
     return events;
 }
 
-app.MapGet("/", () => GetAllCalendarEvents());
+app.MapGet("/", GetAllCalendarEvents);
 
 app.Run();
 
