@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.Graph;
 using WebApplication = Microsoft.AspNetCore.Builder.WebApplication;
 using Microsoft.Graph.Extensions;
+using Microsoft.Extensions.Options;
 
 dotenv.net.DotEnv.Load();
 
@@ -17,31 +18,28 @@ static string? TryGetEnv(string key)
     return Environment.GetEnvironmentVariable(key);
 }
 
-string username = GetEnv("USERNAME");
-string password = GetEnv("PASSWORD");
-string tenantId = GetEnv("TENANT_ID");
-string clientId = GetEnv("CLIENT_ID");
-string openIdAuthority = GetEnv("OPENID_AUTHORITY");
-var meetingRooms = GetEnv("MEETING_ROOMS").Split(',', ';');
-int countOfEvents = int.Parse(TryGetEnv("NUMBER_OF_EVENTS") ?? "5");
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton(serviceProvider =>
+{
+    return new Settings(
+        Username: GetEnv("USERNAME"),
+        Password: GetEnv("PASSWORD"),
+        TenantId: GetEnv("TENANT_ID"),
+        ClientId: GetEnv("CLIENT_ID"),
+        OpenIdAuthority: GetEnv("OPENID_AUTHORITY"),
+        MeetingRooms: GetEnv("MEETING_ROOMS").Split(',', ';'),
+        NumberOfEvents: int.Parse(TryGetEnv("NUMBER_OF_EVENTS") ?? "5")
+    );
+});
 
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(jwtBearerOptions =>
-{
-    jwtBearerOptions.Authority = openIdAuthority;
-    jwtBearerOptions.TokenValidationParameters = new TokenValidationParameters
-    {
-        NameClaimType = "preferred_username",
-        ValidateAudience = false
-    };
-});
+}).AddJwtBearer();
+
+builder.Services.ConfigureOptions<ConfigureJwtBearerOptions>();
 
 builder.Services.AddAuthorization(options =>
 {
@@ -49,26 +47,31 @@ builder.Services.AddAuthorization(options =>
         policy.RequireAuthenticatedUser());
 });
 
+builder.Services.AddSingleton(serviceProvider =>
+{
+    var settings = serviceProvider.GetService<Settings>()!;
+    var credential = new UsernamePasswordCredential(
+        username: settings.Username,
+        password: settings.Password,
+        tenantId: settings.TenantId,
+        clientId: settings.ClientId
+    );
+    return new GraphServiceClient(credential);
+});
+
 var app = builder.Build();
 app.UseAuthentication();
 app.UseAuthorization();
 
-var credential = new UsernamePasswordCredential(
-    username,
-    password,
-    tenantId,
-    clientId
-);
-var client = new GraphServiceClient(credential);
-
 async Task<IEnumerable<Event>> GetEventsFromCalendar(
     GraphServiceClient client,
+    Settings settings,
     string meetingRoom,
     DateOnly start,
     DateOnly end
 )
 {
-    // Only query for the next `COUNT_OF_EVENTS` number of events
+    // Only query for the next `NUMBER_OF_EVENTS` number of events
     var result = await client.Users[meetingRoom]
         .CalendarView
         .Request(new[] {
@@ -76,35 +79,35 @@ async Task<IEnumerable<Event>> GetEventsFromCalendar(
             new QueryOption("endDateTime", end.ToString("yyyy-MM-dd"))
         })
         .OrderBy("start/dateTime desc")
-        .Top(countOfEvents)
+        .Top(settings.NumberOfEvents)
         .GetAsync();
     return result
         .Select(@event =>
             new Event(
-                meetingRoom,
-                @event.Subject,
-                @event.Body.Content,
-                @event.Start.ToDateTimeOffset(),
-                @event.End.ToDateTimeOffset()
+                MeetingRoom: meetingRoom,
+                Subject: @event.Subject,
+                Body: @event.Body.Content,
+                StartDateTime: @event.Start.ToDateTimeOffset(),
+                EndDateTime: @event.End.ToDateTimeOffset()
             )
         );
 }
 
-async Task<IEnumerable<Event>> GetAllCalendarEvents()
+async Task<IEnumerable<Event>> GetAllCalendarEvents(GraphServiceClient client, Settings settings)
 {
     // Get events for the next sixty days.
     var start = DateOnly.FromDateTime(DateTime.Today);
     var end = start.AddDays(60);
     var eventss = await Task.WhenAll(
-        meetingRooms.Select(meetingRoom =>
-            GetEventsFromCalendar(client, meetingRoom, start, end)
+        settings.MeetingRooms.Select(meetingRoom =>
+            GetEventsFromCalendar(client, settings, meetingRoom, start, end)
         )
     );
     var events =
         eventss
             .SelectMany(events => events)
             .OrderBy(e => e.StartDateTime)
-            .Take(countOfEvents);
+            .Take(settings.NumberOfEvents);
     return events;
 }
 
@@ -114,3 +117,29 @@ app.Run();
 
 record Event(string MeetingRoom, string Subject, string Body, DateTimeOffset StartDateTime, DateTimeOffset EndDateTime);
 
+record Settings(string Username, string Password, string TenantId, string ClientId, string OpenIdAuthority, string[] MeetingRooms, int NumberOfEvents);
+
+class ConfigureJwtBearerOptions : IConfigureNamedOptions<JwtBearerOptions>
+{
+    private readonly Settings _settings;
+
+    public ConfigureJwtBearerOptions(Settings settings)
+    {
+        _settings = settings;
+    }
+
+    public void Configure(string name, JwtBearerOptions options)
+    {
+        Configure(options);
+    }
+
+    public void Configure(JwtBearerOptions options)
+    {
+        options.Authority = _settings.OpenIdAuthority;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            NameClaimType = "preferred_username",
+            ValidateAudience = false
+        };
+    }
+}
