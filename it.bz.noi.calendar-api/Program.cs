@@ -27,7 +27,7 @@ int countOfEvents = int.Parse(TryGetEnv("NUMBER_OF_EVENTS") ?? "5");
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddMemoryCache();
+builder.Services.AddSingleton(serviceProvider =>
 
 builder.Services.AddAuthentication(options =>
 {
