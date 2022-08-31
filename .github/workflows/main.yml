@@ -8,7 +8,7 @@ env:
   PROJECT_NAME: noi-calendar-api
   DOCKER_IMAGE: ghcr.io/${{ github.repository }}/${{ github.event.repository.name }}-app
   DOCKER_TAG: ${{ github.sha }}
-  SERVER_PORT: 1044
+  SERVER_PORT: 1045
 
 jobs:
   test:
