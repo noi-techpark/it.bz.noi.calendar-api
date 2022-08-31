@@ -38,15 +38,18 @@ builder.Services.AddSingleton(serviceProvider =>
     );
 });
 
-builder.Services.AddControllers();
-builder.Services.ConfigureOptions<CalendarApiODataOptions>();
+builder.Services
+    .ConfigureOptions<CalendarApiODataOptions>()
+    .AddControllers();
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer();
-builder.Services.ConfigureOptions<ConfigureJwtBearerOptions>();
+builder.Services
+    .ConfigureOptions<ConfigureJwtBearerOptions>()
+    .AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer();
 
 builder.Services.AddAuthorization(options =>
 {
@@ -191,3 +194,4 @@ public class CalendarController : ODataController
             );
     }
 }
+
