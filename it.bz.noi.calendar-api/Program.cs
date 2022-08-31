@@ -19,7 +19,8 @@ builder.Services.AddSingleton(serviceProvider =>
 
     static string GetEnv(string key)
     {
-        return Environment.GetEnvironmentVariable(key) ?? throw new Exception($"Environment variable {key} not set.");
+        return Environment.GetEnvironmentVariable(key) ??
+            throw new Exception($"Environment variable {key} not set.");
     }
 
     static string? TryGetEnv(string key)
