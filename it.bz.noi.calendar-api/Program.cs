@@ -111,7 +111,7 @@ async Task<IEnumerable<Event>> GetAllCalendarEvents(GraphServiceClient client, S
     return events;
 }
 
-app.MapGet("/", GetAllCalendarEvents);
+app.MapGet("/", GetAllCalendarEvents).RequireAuthorization("noi-auth");
 
 app.Run();
 
