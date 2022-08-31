@@ -78,7 +78,7 @@ async Task<IEnumerable<Event>> GetEventsFromCalendar(
             new QueryOption("startDateTime", start.ToString("yyyy-MM-dd")),
             new QueryOption("endDateTime", end.ToString("yyyy-MM-dd"))
         })
-        .OrderBy("start/dateTime desc")
+        .OrderBy("start/dateTime")
         .Top(settings.NumberOfEvents)
         .GetAsync();
     return result
