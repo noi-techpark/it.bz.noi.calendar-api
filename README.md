@@ -14,8 +14,10 @@ MEETING_ROOMS=meetingroom02@noi.bz.it,meetingroom41@noi.bz.it,meetingroom14@noi.
 NUMBER_OF_EVENTS=3
 ```
 
-`MEETING_ROOMS`
-: The meeting rooms to retrieve can be provided with the `MEETING_ROOMS` environment variable. You can delimit the rooms by comma , or by semicolon ;.
+<dl>
+  <dt>`MEETING_ROOMS`</dt>
+  <dd>The meeting rooms to retrieve can be provided with the `MEETING_ROOMS` environment variable. You can delimit the rooms by comma `,` or by semicolon `;`.</dd>
 
-`NUMBER_OF_EVENTS` (optional, defaults to 5)
-: The number of retrieved events can be configured by setting the `NUMBER_OF_EVENTS` environment variable.
+  <dt>`NUMBER_OF_EVENTS` (optional, defaults to 5)</dt>
+  <dd>The number of retrieved events can be configured by setting the `NUMBER_OF_EVENTS` environment variable.</dd>
+</dl>
