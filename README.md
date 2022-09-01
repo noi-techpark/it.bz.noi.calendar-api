@@ -51,7 +51,7 @@ You can use OData query functionality. The following OData query options are ava
 * Query for the events of a specific meeting room:   
   `<BASE_URL>?$filter=meetingroom eq 'meetingroom02@noi.bz.it'`
 
-* Query for the events containing a specific subject:
+* Query for the events containing a specific subject:    
   `<BASE_URL>?$filter=contains(subject, 'Meeting')`
 
 * Return only subject and start date:    
