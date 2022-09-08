@@ -31,6 +31,10 @@ jobs:
     if: github.ref == 'refs/heads/main'
     needs: test
     concurrency: deploy-test
+    env:
+      OPENID_AUTHORITY: "https://auth.opendatahub.testingmachine.eu/auth/realms/noi/"      
+      MEETING_ROOMS: "meetingroom02@noi.bz.it,meetingroom41@noi.bz.it,meetingroom14@noi.bz.it,meetingroom26@noi.bz.it"
+      NUMBER_OF_EVENTS: 300
     steps:
       - name: Checkout source code
         uses: actions/checkout@v2
@@ -45,12 +49,13 @@ jobs:
           X_DOCKER_TAG: ${{ env.DOCKER_TAG }}
           X_SERVER_PORT: ${{ env.SERVER_PORT }}
           X_ASPNETCORE_ENVIRONMENT: "Development"
-          X_CLIENT_ID: ${{ secrets.CLIENT_ID_TEST }}
-          X_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET_TEST }}
-          X_SERVICE_SCOPE: ${{ secrets.SERVICE_SCOPE_TEST }}
-          X_SERVICE_URL: ${{ secrets.SERVICE_URL_TEST }}
+          X_CLIENT_ID: ${{ secrets.CLIENT_ID_TEST }}                              
           X_TENANT_ID: ${{ secrets.TENANT_ID_TEST }}
-          X_OPENID_AUTHORITY: "https://auth.opendatahub.testingmachine.eu/auth/realms/noi/"
+          X_PASSWORD: ${{ secrets.PASSWORD_TEST }}    
+          X_USERNAME: ${{ secrets.USERNAME_TEST }}    
+          X_OPENID_AUTHORITY: ${{ env.OPENID_AUTHORITY }}
+          X_MEETING_ROOMS: ${{ env.MEETING_ROOMS }}
+          X_NUMBER_OF_EVENTS: ${{ env.NUMBER_OF_EVENTS }}          
 
       - name: Build and push images
         uses: noi-techpark/github-actions/docker-build-and-push@v2
@@ -72,6 +77,10 @@ jobs:
     if: github.ref == 'refs/heads/prod'
     needs: test
     concurrency: deploy-prod
+    env:
+      OPENID_AUTHORITY: "https://auth.opendatahub.bz.it/auth/realms/noi/"      
+      MEETING_ROOMS: "meetingroom02@noi.bz.it,meetingroom41@noi.bz.it,meetingroom14@noi.bz.it,meetingroom26@noi.bz.it"
+      NUMBER_OF_EVENTS: 300
     steps:
       - name: Checkout source code
         uses: actions/checkout@v2
@@ -86,12 +95,13 @@ jobs:
           X_DOCKER_TAG: ${{ env.DOCKER_TAG }}
           X_SERVER_PORT: ${{ env.SERVER_PORT }}
           X_ASPNETCORE_ENVIRONMENT: "Production"
-          X_CLIENT_ID: ${{ secrets.CLIENT_ID_PROD }}
-          X_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET_PROD }}
-          X_SERVICE_SCOPE: ${{ secrets.SERVICE_SCOPE_PROD }}
-          X_SERVICE_URL: ${{ secrets.SERVICE_URL_PROD }}
+          X_CLIENT_ID: ${{ secrets.CLIENT_ID_PROD }}                              
           X_TENANT_ID: ${{ secrets.TENANT_ID_PROD }}
-          X_OPENID_AUTHORITY: "https://auth.opendatahub.bz.it/auth/realms/noi/"
+          X_PASSWORD: ${{ secrets.PASSWORD_PROD }}    
+          X_USERNAME: ${{ secrets.USERNAME_PROD }}    
+          X_OPENID_AUTHORITY: ${{ env.OPENID_AUTHORITY }}
+          X_MEETING_ROOMS: ${{ env.MEETING_ROOMS }}
+          X_NUMBER_OF_EVENTS: ${{ env.NUMBER_OF_EVENTS }}                 
 
       - name: Build and push images
         uses: noi-techpark/github-actions/docker-build-and-push@v2
