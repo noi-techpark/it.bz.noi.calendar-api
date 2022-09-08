@@ -58,7 +58,7 @@ builder.Services.AddAuthorization(options =>
         policy.RequireAuthenticatedUser());
 });
 
-builder.Services.AddSingleton(serviceProvider =>
+builder.Services.AddScoped(serviceProvider =>
 {
     var settings = serviceProvider.GetService<Settings>()!;
     var credential = new UsernamePasswordCredential(
