@@ -78,7 +78,7 @@ jobs:
     needs: test
     concurrency: deploy-prod
     env:
-      OPENID_AUTHORITY: "https://auth.opendatahub.bz.it/auth/realms/noi/"      
+      OPENID_AUTHORITY: "https://auth.opendatahub.com/auth/realms/noi/"      
       MEETING_ROOMS: "meetingroom02@noi.bz.it,meetingroom41@noi.bz.it,meetingroom14@noi.bz.it,meetingroom26@noi.bz.it"
       NUMBER_OF_EVENTS: 300
     steps:
