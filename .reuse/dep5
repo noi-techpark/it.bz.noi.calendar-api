@@ -1,0 +1,9 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: it.bz.noi.calendar-api
+Upstream-Contact: NOI Techpark <digital@noi.bz.it>
+Source: https://github.com/noi-techpark/it.bz.noi.calendar-api
+
+Files: .github/* infrastructure/* .config/* .gitignore .dockerignore LICENSE .env.example it.bz.noi.calendar-api.sln Dockerfile
+        it.bz.noi.calendar-api/.env.example it.bz.noi.calendar-api/it.bz.noi.calendar-api.csproj it.bz.noi.calendar-api/it.bz.noi.calendar-api.csproj.user it.bz.noi.calendar-api/Properties/launchSettings.json
+Copyright: (c) NOI Techpark <digital@noi.bz.it>
+License: CC0-1.0
