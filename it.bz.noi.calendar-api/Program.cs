@@ -142,7 +142,9 @@ public class CalendarController : ODataController
         _settings = settings;
     }
 
+#if !DEBUG
     [Authorize("noi-auth")]
+#endif
     [EnableQuery]
     [HttpGet("/")]
     public async Task<List<Event>> Get()
