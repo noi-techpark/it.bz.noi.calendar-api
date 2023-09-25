@@ -47,16 +47,14 @@ builder.Services
     .ConfigureOptions<CalendarApiODataOptions>()
     .AddControllers();
 
-if (builder.Environment.IsProduction()) {
-    builder.Services
-        .ConfigureOptions<ConfigureJwtBearerOptions>()
-        .AddAuthentication(options =>
-        {
-            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        })
-        .AddJwtBearer();
-}
+builder.Services
+    .ConfigureOptions<ConfigureJwtBearerOptions>()
+    .AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer();
 
 builder.Services.AddAuthorization(options =>
 {
