@@ -47,14 +47,16 @@ builder.Services
     .ConfigureOptions<CalendarApiODataOptions>()
     .AddControllers();
 
-builder.Services
-    .ConfigureOptions<ConfigureJwtBearerOptions>()
-    .AddAuthentication(options =>
-    {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    })
-    .AddJwtBearer();
+if (builder.Environment.IsProduction()) {
+    builder.Services
+        .ConfigureOptions<ConfigureJwtBearerOptions>()
+        .AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer();
+}
 
 builder.Services.AddAuthorization(options =>
 {
@@ -142,7 +144,7 @@ public class CalendarController : ODataController
         _settings = settings;
     }
 
-    [Authorize("noi-auth")]
+    // [Authorize("noi-auth")]
     [EnableQuery]
     [HttpGet("/")]
     public async Task<List<Event>> Get()
