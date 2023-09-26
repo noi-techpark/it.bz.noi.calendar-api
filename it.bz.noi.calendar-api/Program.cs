@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Graph;
 using WebApplication = Microsoft.AspNetCore.Builder.WebApplication;
-using Microsoft.Graph.Extensions;
+using Microsoft.Graph.Models;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.AspNetCore.OData.Query;
@@ -82,7 +82,7 @@ app.MapControllers();
 
 app.Run();
 
-public record Event(string Id, string MeetingRoom, string Subject, string Body, DateTimeOffset StartDateTime, DateTimeOffset EndDateTime);
+public record Event(string? Id, string MeetingRoom, string? Subject, string? Body, DateTimeOffset StartDateTime, DateTimeOffset EndDateTime);
 
 public record Settings(string Username, string Password, string TenantId, string ClientId, string OpenIdAuthority, string[] MeetingRooms, int NumberOfEvents);
 
@@ -181,24 +181,23 @@ public class CalendarController : ODataController
         // Only query for the next `NUMBER_OF_EVENTS` number of events
         var result = await client.Users[meetingRoom]
             .CalendarView
-            .Request(new[] {
-                new QueryOption("startDateTime", start.ToString("yyyy-MM-dd")),
-                new QueryOption("endDateTime", end.ToString("yyyy-MM-dd"))
-            })
-            .OrderBy("start/dateTime")
-            .Top(settings.NumberOfEvents)
-            .GetAsync();
-        return result
+            .GetAsync(config => {
+                config.QueryParameters.StartDateTime = start.ToString("yyyy-MM-dd");
+                config.QueryParameters.EndDateTime = end.ToString("yyyy-MM-dd");
+                config.QueryParameters.Top = 5;
+                config.QueryParameters.Orderby = new[] { "start/dateTime" };
+            });
+        return result?.Value != null ? result.Value
             .Select(@event =>
                 new Event(
                     Id: @event.Id,
                     MeetingRoom: meetingRoom,
                     Subject: @event.Subject,
-                    Body: @event.Body.Content,
+                    Body: @event.Body?.Content,
                     StartDateTime: @event.Start.ToDateTimeOffset(),
                     EndDateTime: @event.End.ToDateTimeOffset()
                 )
-            );
+            ) : Enumerable.Empty<Event>();
     }
 }
 
