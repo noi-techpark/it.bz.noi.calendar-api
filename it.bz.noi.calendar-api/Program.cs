@@ -82,7 +82,9 @@ app.MapControllers();
 
 app.Run();
 
-public record Event(string? Id, string MeetingRoom, string? Subject, string? Body, DateTimeOffset StartDateTime, DateTimeOffset EndDateTime);
+public record Organizer(string Name, string Address);
+public record Location(string Id, string Name, string Uri);
+public record Event(string? Id, string MeetingRoom, Organizer? Organizer, Location? Location, string? Subject, string? Body, DateTimeOffset StartDateTime, DateTimeOffset EndDateTime);
 
 public record Settings(string Username, string Password, string TenantId, string ClientId, string OpenIdAuthority, string[] MeetingRooms, int NumberOfEvents);
 
@@ -181,23 +183,61 @@ public class CalendarController : ODataController
         // Only query for the next `NUMBER_OF_EVENTS` number of events
         var result = await client.Users[meetingRoom]
             .CalendarView
-            .GetAsync(config => {
+            .GetAsync(config =>
+            {
                 config.QueryParameters.StartDateTime = start.ToString("yyyy-MM-dd");
                 config.QueryParameters.EndDateTime = end.ToString("yyyy-MM-dd");
                 config.QueryParameters.Top = 5;
                 config.QueryParameters.Orderby = new[] { "start/dateTime" };
             });
         return result?.Value != null ? result.Value
-            .Select(@event =>
+            .Select((Func<Microsoft.Graph.Models.Event, Event>)(@event =>
                 new Event(
                     Id: @event.Id,
                     MeetingRoom: meetingRoom,
-                    Subject: @event.Subject,
+                    Organizer: ExtractOrganizer(@event),
+                    Location: ExtractLocation(@event),
+                    Subject: ExtractSubject(@event.Subject),
                     Body: @event.Body?.Content,
                     StartDateTime: @event.Start.ToDateTimeOffset(),
                     EndDateTime: @event.End.ToDateTimeOffset()
-                )
+                ))
             ) : Enumerable.Empty<Event>();
+    }
+
+    private static Organizer? ExtractOrganizer(Microsoft.Graph.Models.Event @event)
+    {
+        if (@event.Organizer?.EmailAddress != null) {
+            return new Organizer(
+                Name: @event.Organizer.EmailAddress?.Name ?? "",
+                Address: @event.Organizer.EmailAddress?.Address ?? ""
+            );
+        }
+        return null;
+    }
+
+    private static Location? ExtractLocation(Microsoft.Graph.Models.Event @event)
+    {
+        if (@event.Location != null) {
+            return new Location(
+                Id: @event.Location.UniqueId ?? "",
+                Name: @event.Location.DisplayName ?? "",
+                Uri: @event.Location.LocationUri ?? ""
+            );
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Remove the first chunk before a comma, as it contains the user name
+    /// </summary>
+    private string? ExtractSubject(string? subject)
+    {
+        var chunks = subject?.Split(',');
+        if (chunks?.Length > 2) {
+            return chunks[1].Trim();
+        }
+        return subject;
     }
 }
 
