@@ -234,7 +234,7 @@ public class CalendarController : ODataController
     private string? ExtractSubject(string? subject)
     {
         var chunks = subject?.Split(',');
-        if (chunks?.Length > 2) {
+        if (chunks?.Length > 1) {
             return chunks[1].Trim();
         }
         return subject;
